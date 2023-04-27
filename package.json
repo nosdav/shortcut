@@ -1,6 +1,6 @@
 {
   "name": "nosdav-shortcut",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "shortcut",
   "main": "index.js",
   "scripts": {
