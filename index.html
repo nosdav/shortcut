@@ -98,6 +98,55 @@
     <script type="module">
       import 'https://cdn.skypack.dev/nostr-login-shim'
       import 'https://cdn.skypack.dev/nosdav-shim'
+
+      // variables
+      const storage = 'https://nosdav.nostr.rocks'
+      const mode = 'm'
+      const appDirectory = 's'
+      const appData = ''
+
+      function generateStorageUrl(
+        storageRoot,
+        appDataDir,
+        appDirectory,
+        mode,
+        publicKey,
+        filename
+      ) {
+        // Extract query parameters from the current URL
+        const urlParams = new URLSearchParams(window.location.search)
+
+        // Set the default values for each parameter if it's not provided in the query string
+        storageRoot =
+          storageRoot ||
+          urlParams.get('storage') ||
+          'https://nosdav.nostr.rocks'
+        appDataDir = appDataDir || urlParams.get('appDataDir') || ''
+        appDirectory = appDirectory || urlParams.get('appDirectory') || ''
+        mode = mode || urlParams.get('mode') || 'm'
+        publicKey = publicKey || urlParams.get('publicKey') || ''
+        filename = filename || urlParams.get('filename') || 's'
+
+        let storageUrl = ''
+        let suffix = '.html'
+
+        if (mode === 'm') {
+          storageUrl = storageRoot
+          if (publicKey) storageUrl += '/' + publicKey
+          if (appDataDir) storageUrl += '/' + appDataDir
+          if (appDirectory) storageUrl += '/' + appDirectory
+          if (filename) storageUrl += '/' + filename
+        } else {
+          storageUrl = storageRoot
+          if (appDataDir) storageUrl += '/' + appDataDir
+          if (appDirectory) storageUrl += '/' + appDirectory
+          if (filename) storageUrl += '/' + filename
+        }
+
+        return storageUrl + suffix
+      }
+
+      // main
       document
         .getElementById('shorten-form')
         .addEventListener('submit', function (event) {
@@ -114,19 +163,24 @@
         .getElementById('shorten-btn')
         .addEventListener('click', async function (event) {
           const longUrl = document.getElementById('long-url').value
-          const customShort = document.getElementById('custom-short').value
+          const customShort =
+            document.getElementById('custom-short').value ||
+            Math.random().toString(36).substr(2, 5)
 
           // If the user has entered a custom short link, use it; otherwise, generate a suggested short link
           const pubkey = await window.nostr.getPublicKey()
-          const shortUrl =
-            'https://nosdav.nostr.rocks/' +
-            pubkey +
-            '/s/' +
-            (customShort ? customShort : generateShortUrl(longUrl)) +
-            '.html'
 
-          await saveShortUrl(shortUrl, longUrl)
-          displayShortUrl(shortUrl)
+          const storageUrl = generateStorageUrl(
+            '',
+            '',
+            '',
+            '',
+            pubkey,
+            customShort
+          )
+
+          await saveShortUrl(storageUrl, longUrl)
+          displayShortUrl(storageUrl)
         })
 
       async function saveShortUrl(shortUrl, longUrl) {
